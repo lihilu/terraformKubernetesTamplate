@@ -13,19 +13,19 @@ resource "aws_vpc" "vpc" {
   }
 }
 
-# SUBNETS
-resource "aws_subnet" "public" {
-  map_public_ip_on_launch = "true"
-  count                   = length(var.public_subnet_cidrs)
-  cidr_block              = var.public_subnet_cidrs[count.index]
-  vpc_id                  = aws_vpc.vpc.id
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
+# # SUBNETS
+# resource "aws_subnet" "public" {
+#   map_public_ip_on_launch = "true"
+#   count                   = length(var.public_subnet_cidrs)
+#   cidr_block              = var.public_subnet_cidrs[count.index]
+#   vpc_id                  = aws_vpc.vpc.id
+#   availability_zone       = data.aws_availability_zones.available.names[count.index]
 
-  tags = {
-    "Name"    = "public_subnet_${regex(".$", data.aws_availability_zones.available.names[count.index])}"
-    "purpose" = var.default_tags
-  }
-}
+#   tags = {
+#     "Name"    = "public_subnet_${regex(".$", data.aws_availability_zones.available.names[count.index])}"
+#     "purpose" = var.default_tags
+#   }
+# }
 
 resource "aws_subnet" "private" {
   count                   = length(var.private_subnet_cidrs)
@@ -50,27 +50,27 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-# EIPs (for nats)
-resource "aws_eip" "eip" {
-  count = length(var.public_subnet_cidrs)
+# # EIPs (for nats)
+# resource "aws_eip" "eip" {
+#   count = length(var.public_subnet_cidrs)
 
-  tags = {
-    "Name"    = "NAT_elastic_ip_${regex(".$", data.aws_availability_zones.available.names[count.index])}"
-    "purpose" = var.default_tags
-  }
-}
+#   tags = {
+#     "Name"    = "NAT_elastic_ip_${regex(".$", data.aws_availability_zones.available.names[count.index])}"
+#     "purpose" = var.default_tags
+#   }
+# }
 
-# NATs
-resource "aws_nat_gateway" "nat" {
-  count         = length(var.public_subnet_cidrs)
-  allocation_id = aws_eip.eip.*.id[count.index]
-  subnet_id     = aws_subnet.public.*.id[count.index]
+# # NATs
+# resource "aws_nat_gateway" "nat" {
+#   count         = length(var.public_subnet_cidrs)
+#   allocation_id = aws_eip.eip.*.id[count.index]
+#   subnet_id     = aws_subnet.public.*.id[count.index]
 
-  tags = {
-    "Name"    = "NAT_${regex(".$", data.aws_availability_zones.available.names[count.index])}"
-    "purpose" = var.default_tags
-  }
-}
+#   tags = {
+#     "Name"    = "NAT_${regex(".$", data.aws_availability_zones.available.names[count.index])}"
+#     "purpose" = var.default_tags
+#   }
+# }
 
 ######################################################################
 ############################## ROUTING ##############################
@@ -85,11 +85,11 @@ resource "aws_route_table" "route_tables" {
   }
 }
 
-resource "aws_route_table_association" "public" {
-  count          = length(var.public_subnet_cidrs)
-  subnet_id      = aws_subnet.public.*.id[count.index]
-  route_table_id = aws_route_table.route_tables[0].id
-}
+# resource "aws_route_table_association" "public" {
+#   count          = length(var.public_subnet_cidrs)
+#   subnet_id      = aws_subnet.public.*.id[count.index]
+#   route_table_id = aws_route_table.route_tables[0].id
+# }
 
 resource "aws_route_table_association" "private" {
   count          = length(var.private_subnet_cidrs)
@@ -97,11 +97,11 @@ resource "aws_route_table_association" "private" {
   route_table_id = aws_route_table.route_tables[count.index + 1].id
 }
 
-resource "aws_route" "public" {
-  route_table_id         = aws_route_table.route_tables[0].id
-  destination_cidr_block = var.destination_cidr_block
-  gateway_id             = aws_internet_gateway.igw.id
-}
+# resource "aws_route" "public" {
+#   route_table_id         = aws_route_table.route_tables[0].id
+#   destination_cidr_block = var.destination_cidr_block
+#   gateway_id             = aws_internet_gateway.igw.id
+# }
 
 resource "aws_route" "private" {
   count                  = length(var.private_subnet_cidrs)
